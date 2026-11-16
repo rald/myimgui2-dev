@@ -23,8 +23,8 @@ void render() {
   if(button(GEN_ID, 150, 150))
     exit(0);
 
-  textfield(GEN_ID, 50, 250, sometext);
-
+  textfield(GEN_ID, 50, 250, sometext, 15);
+  
   int slidervalue = ((bgcolor >> 16) & 0xff);
   if(slider(GEN_ID, 500, 40, 255, &slidervalue)) {
     bgcolor = (bgcolor & 0x00ffff) | (slidervalue << 16);

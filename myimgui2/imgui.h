@@ -42,7 +42,7 @@ void drawrect(int x, int y, int w, int h, Uint32 color);
 int regionhit(int x, int y, int w, int h);
 int button(int id, int x, int y);
 int slider(int id, int x, int y, int max, int *value);
-int textfield(int id, int x, int y, char *buffer);
+int textfield(int id, int x, int y, char *buffer, int max_visible_chars);
 void imgui_prepare();
 void imgui_finish();
 
@@ -217,8 +217,7 @@ int slider(int id, int x, int y, int max, int *value) {
   return 0;
 }
 
-int textfield(int id, int x, int y, char *buffer) {
-  int max_visible_chars = 30;   // Number of characters visible in the box at once
+int textfield(int id, int x, int y, char *buffer, int max_visible_chars) {
   int max_buffer_len = 79;      // Max buffer size to prevent buffer overflow (for 80-char buffers)
   int len = strlen(buffer);
   int changed = 0;
@@ -242,18 +241,19 @@ int textfield(int id, int x, int y, char *buffer) {
     drawrect(x - 4, y - 4, max_visible_chars * 14 + 8, 24 + 8, 0x777777);
   }
 
-  // Calculate scroll offset so the view shifts as text exceeds the visible window
+  // Calculate scroll offset reserving 1 character slot for the cursor
+  int visible_chars = max_visible_chars > 1 ? max_visible_chars - 1 : 1;
   int scroll_offset = 0;
-  if(len > max_visible_chars) {
-    scroll_offset = len - max_visible_chars;
+  if(len > visible_chars) {
+    scroll_offset = len - visible_chars;
   }
 
   // Draw only the visible slice of the string starting from scroll_offset
   drawstring(buffer + scroll_offset, x, y);
 
-  // Position the cursor at the end of the visible text window
-  int cursor_pos_x =
-    x + ((len < max_visible_chars) ? len : max_visible_chars) * 14;
+  // Position the cursor immediately after the visible text slice
+  int visible_len = len - scroll_offset;
+  int cursor_pos_x = x + visible_len * 14;
   if(uistate.kbditem == id && (SDL_GetTicks() >> 8) & 1)
     drawstring("_", cursor_pos_x, y);
 
@@ -274,7 +274,7 @@ int textfield(int id, int x, int y, char *buffer) {
       break;
     }
 
-    // Allow typing up to max_buffer_len instead of capping at 30
+    // Allow typing up to max_buffer_len instead of capping at max_visible_chars
     if(uistate.keychar != 0 && len < max_buffer_len) {
       buffer[len] = uistate.keychar;
       len++;
@@ -311,6 +311,6 @@ void imgui_finish() {
   uistate.keychar = 0;
 }
 
-#endif
+#endif /* IMGUI_IMPLEMENTATION */
 
-#endif
+#endif /* IMGUI_H */
